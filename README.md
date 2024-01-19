@@ -25,6 +25,7 @@ There are 3 main endpoints
 ## A little about techniques
 - RESTful API conventions - https://jsonapi.org/
 - Dependencies, configs conventions - https://12factor.net/
+- **Skipped some docstrings on purpose.** When naming is self-explanatory, I don't usually use comments or docstrings
 - There are enough places for improvement: Event Driven Design, Cache layer, gRPC if needed.
 
 ## Main scenarios
