@@ -2,31 +2,13 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.v1.core.config import settings
 from app.v1.dependencies import get_translation_service
 from app.v1.models import Word as WordModel
 from app.v1.services.translation import TranslationService
 from app.v1.services.google_translate import GoogleTranslateService
 
 router = APIRouter(prefix="/translations", tags=["translations"])
-LIMIT = 10
-
-
-@router.get("/")
-async def get_list_of_words(skip: int = 0, limit: int = LIMIT, sort: str = 'asc', word: str = '',
-                            translation: TranslationService = Depends(get_translation_service)):
-    return await translation.get_list_of_words(skip, limit, sort, word)
-
-
-@router.delete("/{word}")
-async def delete_word(word: str, translation: TranslationService = Depends(get_translation_service)):
-    try:
-        result = await translation.delete_word(word)
-
-        return {"message": f'The word {word} was deleted successfully.'}
-    except Exception as e:
-        # # I'd log something here. Didn't have much time
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                            detail=f'An error occurred while deleting the word {word}')
 
 
 @router.get("/{word}", response_model=WordModel)
@@ -62,7 +44,6 @@ async def get_word(word: str, sl: str = '', tl: str = '',
 
         if translated_word:
             is_language_available = tl in translated_word.languages
-            print(translated_word.languages)
 
             if is_language_available:
                 return translation_service.get_only_my_language(translated_word, tl)
@@ -82,5 +63,39 @@ async def get_word(word: str, sl: str = '', tl: str = '',
 
         return google_word
     except Exception as e:
-        # I'd log something here. Didn't have much time
-        pass
+        # Log the details here
+        # <here>
+        raise HTTPException(status_code=500, detail="An error occurred while processing the request")
+
+
+@router.get("/")
+async def get_list_of_words(skip: int = settings.SKIP, limit: int = settings.LIMIT, sort: str = settings.SORTING,
+                            word: str = '', translation: TranslationService = Depends(get_translation_service)):
+    """
+    Get list of all words in DB.
+
+    Filters:
+    - Partial by word match
+    - Sorting by word
+    - Limit and skip
+    :param skip:
+    :param limit:
+    :param sort:
+    :param word:
+    :param translation:
+    :return:
+    """
+    return await translation.get_list_of_words(skip, limit, sort, word)
+
+
+@router.delete("/{word}")
+async def delete_word(word: str, translation: TranslationService = Depends(get_translation_service)):
+    try:
+        result = await translation.delete_word(word)
+
+        return {"message": f'The word {word} was deleted successfully.'}
+    except Exception as e:
+        # # I'd log something here. Didn't have much time
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f'An error occurred while deleting the word {word}')

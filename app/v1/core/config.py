@@ -9,14 +9,17 @@ class CommonSettings(BaseSettings):
     """
     Common settings for all environments.
     """
-    DEBUG: bool
     APP_TITLE: str
     APP_VERSION: str
     APP_DESCRIPTION: str
+    DEBUG: bool
     MONGO_INITDB_ROOT_USERNAME: str
     MONGO_INITDB_ROOT_PASSWORD: str
     MONGO_URL: str
     MONGO_DB: str
+    LIMIT: int = 10
+    SKIP: int = 0
+    SORTING: str = 'asc'
 
 
 class DevelopmentSettings(CommonSettings):
