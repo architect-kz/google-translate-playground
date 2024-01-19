@@ -15,7 +15,7 @@ app.include_router(v1_router, prefix="/v1")
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """
     Custom exception handler. jsonapi.org conventions error responses.
     Example:
@@ -33,7 +33,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     """
     Custom validation exception handler.
     """
@@ -44,7 +44,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 @app.get("/")
-async def root() -> dict:
+async def root() -> dict[str, str]:
     """ Welcome endpoint """
     return {
         'title': settings.APP_TITLE,
