@@ -1,0 +1,9 @@
+.git
+.gitignore
+.idea
+.cache
+*.pyc
+**/__pycache__
+__pycache__/
+src/log/*.log
+.pytest_cache
