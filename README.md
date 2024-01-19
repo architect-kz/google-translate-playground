@@ -8,6 +8,11 @@ This app gets the word translation from Google Translate service and stores in M
     
     docker compose --env-file .env.development up -d --build (for detached mode)
 
+## Where to test
+- http://0.0.0.0:8000/docs - Swagger
+- http://0.0.0.0:8000/redoc - Redoc
+- Note: In a real production environment they can be hidden or disabled
+
 ## Endoints
 
 There are 3 main endpoints
@@ -15,6 +20,7 @@ There are 3 main endpoints
 - **GET** /v1/translations - filters: ?limit=1&skip=2&sort=asc&word=cha (chal, challenge)
 - **GET** /v1/translations/{word}
 - **DELETE** /v1/translations/{word}
+- Note: There are some validators for parameters, check the schemas. Play around.
 
 ## Database
 
@@ -23,7 +29,7 @@ There are 3 main endpoints
 - Collection and document naming conventions are simple: JavaScript document style.
 
 ## A little about techniques and further impovements
-- RESTful API conventions - https://jsonapi.org/
+- RESTful API conventions - https://jsonapi.org/: Namings, HTTP codes, exception handling.
 - Dependencies, configs conventions - https://12factor.net/
 - **Skipped some docstrings on purpose.** When naming is self-explanatory, I don't usually use comments or docstrings
 - There are enough places for improvement: Event Driven Design, Cache layer, gRPC if needed.
