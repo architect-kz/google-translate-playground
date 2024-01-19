@@ -101,8 +101,8 @@ class TranslationRepository(ITranslation):
         return TranslationListResponse(
             meta={
                 'totalPages': total_count,
-                'limit': limit,
                 'skip': skip,
+                'limit': limit,
             },
             data=words
         )

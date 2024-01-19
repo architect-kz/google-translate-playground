@@ -1,5 +1,3 @@
-import uvicorn
-
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -53,7 +51,3 @@ async def root() -> dict:
         'version': settings.APP_VERSION,
         'description': settings.APP_DESCRIPTION
     }
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)

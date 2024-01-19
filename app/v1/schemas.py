@@ -24,11 +24,14 @@ class DeleteWordResponse(BaseModel):
 
 class WordRequest(BaseModel):
     word: str = Field(min_length=2)
-    sl: str = Field(pattern=r'^[a-zA-Z]{2}$', default='')
-    tl: str = Field(pattern=r'^[a-zA-Z]{2}$', default='')
+    sl: str = Field(min_length=2, pattern='^[a-zA-Z]+$', default='auto')
+    tl: str = Field(min_length=2, max_length=2, pattern='^[a-zA-Z]+$', default='en')
 
     @model_validator(mode='before')
     def check_languages_not_same(cls, data):
+        data['sl'] = data['sl'].lower()
+        data['tl'] = data['tl'].lower()
+
         if data['sl'] == data['tl']:
             raise RequestValidationError('Source and target languages cannot be the same', body={
                 'sl': data['sl'],
