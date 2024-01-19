@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 from pymongo.results import DeleteResult
 
+from app.v1.schemas import TranslationListResponse
+
 
 class ITranslation(ABC):
     """
@@ -60,9 +62,10 @@ class TranslationRepository(ITranslation):
     async def delete_word(self, word: str) -> DeleteResult:
         return await self.collection.delete_one({"word": word})
 
-    async def get_list_of_words(self, skip: int = 0, limit: int = 10, sort: str = 'asc', word: str = '') -> list:
+    async def get_list_of_words(self, skip: int = 0, limit: int = 10, sort: str = 'asc',
+                                word: str = '') -> TranslationListResponse:
         """
-        Return list of all words in DB.
+        Return list of all words in DB with totalPages. See TranslationListResponse
         Play with "projection" to get desired fields.
 
         Filters:
@@ -70,22 +73,46 @@ class TranslationRepository(ITranslation):
         - Sorting by word
         - Limit and skip
         """
-        sort_order = -1 if sort == 'desc' else 1
-        projection = {
+        sort_order: int = -1 if sort == 'desc' else 1
+        projection: dict = {
             '_id': 0,
             'word': 1,
             'language': 1
         }
+        query: dict = {}
 
-        if filter:
+        if word:
             regex_pattern = f".*{word}.*"
             query = {
                 'word': {'$regex': regex_pattern, '$options': 'i'}
             }
-            cursor = self.collection.find(query, projection=projection).skip(skip).limit(limit).sort('word', sort_order)
+
+        pipeline: list[dict] = [
+            {"$match": query},
+            {"$facet": {
+                "totalCount": [{"$count": "count"}],
+                "results": [
+                    {"$sort": {"word": sort_order}},
+                    {"$skip": skip},
+                    {"$limit": limit},
+                    {"$project": projection}
+                ]
+            }}
+        ]
+        result = await self.collection.aggregate(pipeline).to_list(length=None)
+
+        if result and result[0]:
+            total_count: int = result[0]["totalCount"][0]["count"] if result[0]["totalCount"] else 0
+            words: list = result[0]["results"]
         else:
-            cursor = self.collection.find(projection=projection).skip(skip).limit(limit).sort('word', sort_order)
+            total_count: int = 0
+            words: list = []
 
-        words = await cursor.to_list(length=None)
-
-        return words
+        return TranslationListResponse(
+            meta={
+                'totalPages': total_count,
+                'limit': limit,
+                'skip': skip,
+            },
+            data=words
+        )

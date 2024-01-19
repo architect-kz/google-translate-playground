@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.v1.core.config import settings
 from app.v1.dependencies import get_translation_service
 from app.v1.models import Word as WordModel
+from app.v1.schemas import TranslationListResponse
 from app.v1.services.translation import TranslationService
 from app.v1.services.google_translate import GoogleTranslateService
 
@@ -68,22 +69,16 @@ async def get_word(word: str, sl: str = '', tl: str = '',
         raise HTTPException(status_code=500, detail="An error occurred while processing the request")
 
 
-@router.get("/")
+@router.get("/", response_model=TranslationListResponse)
 async def get_list_of_words(skip: int = settings.SKIP, limit: int = settings.LIMIT, sort: str = settings.SORTING,
                             word: str = '', translation: TranslationService = Depends(get_translation_service)):
     """
-    Get list of all words in DB.
+    Get list of all words in DB. See TranslationsList
 
     Filters:
     - Partial by word match
     - Sorting by word
     - Limit and skip
-    :param skip:
-    :param limit:
-    :param sort:
-    :param word:
-    :param translation:
-    :return:
     """
     return await translation.get_list_of_words(skip, limit, sort, word)
 
