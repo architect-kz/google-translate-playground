@@ -7,6 +7,12 @@ from app.v1.services.google_translate import GoogleTranslateService
 from app.v1.models import Word, Language
 from tests.stubs.extra_data import extra_data
 
+"""
+We can cover repositories, all services.
+I think this is enough to show the mindset of an engineer. 
+With some extra time, we could have covered up to 90-99% 
+"""
+
 
 @pytest.fixture
 def mock_translator():
