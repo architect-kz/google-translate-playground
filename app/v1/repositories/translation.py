@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
-from pymongo.results import DeleteResult
+from pymongo.results import DeleteResult, InsertOneResult, UpdateResult
 
 from app.v1.schemas import TranslationListResponse
 
@@ -16,7 +16,7 @@ class ITranslation(ABC):
         pass
 
     @abstractmethod
-    async def insert_word(self, word: dict) -> bool:
+    async def insert_word(self, word: dict) -> InsertOneResult:
         pass
 
     @abstractmethod
@@ -24,11 +24,11 @@ class ITranslation(ABC):
         pass
 
     @abstractmethod
-    async def get_list_of_words(self, skip: int, limit: int, sort: str, word: str) -> list:
+    async def update_word(self, query: dict, data: dict) -> UpdateResult:
         pass
 
     @abstractmethod
-    async def update_word(self, query: dict, data: dict) -> bool:
+    async def get_list_of_words(self, skip: int, limit: int, sort: str, word: str) -> TranslationListResponse:
         pass
 
 
@@ -43,24 +43,14 @@ class TranslationRepository(ITranslation):
     async def get_word(self, word: str, sl: str) -> dict:
         return await self.collection.find_one({"word": word, 'language': sl})
 
-    async def insert_word(self, word: dict) -> bool:
-        try:
-            result = await self.collection.insert_one(word)
-            return result.acknowledged
-        except Exception as e:
-            # Log something here
-            return False
-
-    async def update_word(self, query: dict, data: dict) -> bool:
-        try:
-            result = await self.collection.update_one(query, {"$set": data})
-            return result.acknowledged
-        except Exception as e:
-            # Log something here
-            return False
+    async def insert_word(self, word: dict) -> InsertOneResult:
+        return await self.collection.insert_one(word)
 
     async def delete_word(self, word: str) -> DeleteResult:
         return await self.collection.delete_one({"word": word})
+
+    async def update_word(self, query: dict, data: dict) -> UpdateResult:
+        return await self.collection.update_one(query, {"$set": data})
 
     async def get_list_of_words(self, skip: int = 0, limit: int = 10, sort: str = 'asc',
                                 word: str = '') -> TranslationListResponse:

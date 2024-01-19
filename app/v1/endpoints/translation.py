@@ -1,11 +1,13 @@
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 
-from app.v1.core.config import settings
+from app.v1.core.exceptions import WordNotFoundException
+from app.v1.schemas import WordRequest, TranslationListRequest
 from app.v1.dependencies import get_translation_service
 from app.v1.models import Word as WordModel
-from app.v1.schemas import TranslationListResponse
+from app.v1.schemas import TranslationListResponse, DeleteWordResponse
 from app.v1.services.translation import TranslationService
 from app.v1.services.google_translate import GoogleTranslateService
 
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/translations", tags=["translations"])
 
 
 @router.get("/{word}", response_model=WordModel)
-async def get_word(word: str, sl: str = '', tl: str = '',
+async def get_word(request: WordRequest = Depends(),
                    translation_service: TranslationService = Depends(get_translation_service),
                    google_translate_service: GoogleTranslateService = Depends(GoogleTranslateService)):
     """
@@ -29,16 +31,16 @@ async def get_word(word: str, sl: str = '', tl: str = '',
     Improvements:
     - We could have used Events (Event Driven Design) in case of saving/updating the Word in DB.
 
-    :param word: Word to translate
-    :param sl: Source Language (Google named it)
-    :param tl: Target Language (Google named it)
+    :param request: WordRequest
+        word: Word to translate
+        sl: Source Language (Google named it)
+        tl: Target Language (Google named it)
     :param translation_service: Injecting Translation Service
     :param google_translate_service: Injecting Google Translate Service
 
     :return: Returns the Word and it's translation in target language
     """
-    if sl == tl:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Source and target languages can not be equal")
+    word, sl, tl = request.word, request.sl, request.tl
 
     try:
         translated_word = await translation_service.get_word_from_db(word, sl)
@@ -52,8 +54,7 @@ async def get_word(word: str, sl: str = '', tl: str = '',
             google_word = await google_translate_service.get_translated_word(word, sl, tl)
 
             # Even if raises an exception, we still can return the translation straight from Google Translate
-            new_language_result = await translation_service.add_new_language_to_word(translated_word, tl,
-                                                                                     google_word.languages[tl])
+            await translation_service.add_new_language_to_word(translated_word, tl, google_word.languages[tl])
 
             return google_word
 
@@ -63,15 +64,19 @@ async def get_word(word: str, sl: str = '', tl: str = '',
         await translation_service.add_new_word(google_word)
 
         return google_word
+    except ValidationError as e:
+        # Log the details <here>
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
+                            detail={'message': str(e)})
     except Exception as e:
-        # Log the details here
-        # <here>
-        raise HTTPException(status_code=500, detail="An error occurred while processing the request")
+        # Log the details <here>
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                            detail={'message': 'An error occurred while processing the request'})
 
 
 @router.get("/", response_model=TranslationListResponse)
-async def get_list_of_words(skip: int = settings.SKIP, limit: int = settings.LIMIT, sort: str = settings.SORTING,
-                            word: str = '', translation: TranslationService = Depends(get_translation_service)):
+async def get_list_of_words(request: TranslationListRequest = Depends(),
+                            translation: TranslationService = Depends(get_translation_service)):
     """
     Get list of all words in DB. See TranslationsList
 
@@ -80,17 +85,20 @@ async def get_list_of_words(skip: int = settings.SKIP, limit: int = settings.LIM
     - Sorting by word
     - Limit and skip
     """
-    return await translation.get_list_of_words(skip, limit, sort, word)
+    return await translation.get_list_of_words(request.skip, request.limit, request.sort, request.word)
 
 
-@router.delete("/{word}")
+@router.delete("/{word}", response_model=DeleteWordResponse)
 async def delete_word(word: str, translation: TranslationService = Depends(get_translation_service)):
     try:
-        result = await translation.delete_word(word)
-
-        return {"message": f'The word {word} was deleted successfully.'}
-    except Exception as e:
-        # # I'd log something here. Didn't have much time
+        return await translation.delete_word(word)
+    except WordNotFoundException as e:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail={'message': str(e)}
+        )
+    except Exception:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f'An error occurred while deleting the word {word}')
+            detail={'message': f'An error occurred while deleting the word {word}'}
+        )
