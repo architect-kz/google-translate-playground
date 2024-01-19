@@ -18,15 +18,16 @@ There are 3 main endpoints
 
 ## Database
 
-- I choosed **MongoDB** for it fits the structure of the gathered information
+- I choose **MongoDB** for it fits the structure of the gathered information
 - Database name: **googleTranslationsDB** - {domain}{Subdomain}{DB}
 - Collection and document naming conventions are simple: JavaScript document style.
 
-## A little about techniques
+## A little about techniques and further impovements
 - RESTful API conventions - https://jsonapi.org/
 - Dependencies, configs conventions - https://12factor.net/
 - **Skipped some docstrings on purpose.** When naming is self-explanatory, I don't usually use comments or docstrings
 - There are enough places for improvement: Event Driven Design, Cache layer, gRPC if needed.
+- I'd like to add some pre-commit hooks: pyflake, black, bandit...
 
 ## Main scenarios
 1. Word with source language (sl) is in DB, and we have target language (tl) translation. Return it.
