@@ -4,9 +4,13 @@ This app gets the word translation from Google Translate service and stores in M
 
 ## How to run
 
-    docker compose --env-file .env.development up --build
+    chmod +x build.sh
     
-    docker compose --env-file .env.development up -d --build (for detached mode)
+    ./build.sh development - to run in development environment
+    ./build.sh production - to run in production environment
+    ./build.sh stop - stop containers and services
+
+    ./build.sh test - to run tests
 
 ## Where to test
 - http://0.0.0.0:8000/docs - Swagger

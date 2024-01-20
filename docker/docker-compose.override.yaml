@@ -1,0 +1,11 @@
+version: "3.1"
+services:
+  tester:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    command: pytest
+    environment:
+      - ENVIRONMENT="development"
+    volumes:
+      - ../:/app
