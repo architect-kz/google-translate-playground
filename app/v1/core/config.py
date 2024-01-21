@@ -30,7 +30,7 @@ class DevelopmentSettings(CommonSettings):
 
 class ProductionSettings(CommonSettings):
     class Config:
-        env_file: str = ".env.development"
+        env_file: str = ".env.production"
         extra: str = 'allow'
 
 

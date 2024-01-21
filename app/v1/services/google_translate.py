@@ -39,7 +39,7 @@ class GoogleTranslateService:
             confidence=data.extra_data.get('confidence', None),
             pronunciation=data.extra_data['translation'][-1][-2],
             definitions=self._get_definitions(data.extra_data),
-            examples=self._get_examples(data.extra_data['examples'][0]),
+            examples=self._get_examples(data.extra_data['examples']),
             translations=self._get_translations(data.extra_data),
         )
 
@@ -93,7 +93,10 @@ class GoogleTranslateService:
         return result
 
     def _get_examples(self, examples: list) -> list[str]:
-        return [example[0] for example in examples]
+        if not examples:
+            return []
+
+        return [example[0] for example in examples[0]]
 
     def _get_translations(self, extra_data: dict) -> dict[str, list[TranslationModel]] | None:
         if not extra_data['all-translations']:

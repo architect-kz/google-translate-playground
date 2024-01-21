@@ -22,7 +22,7 @@ class Language(BaseModel):
     pronunciation: Optional[str] = None
     definitions: Optional[dict[str, list[Definition]]] = None
     examples: Optional[list[str]] = None
-    translations: dict[str, list[Translation]]
+    translations: dict[str, list[Translation]] | None
 
 
 class Word(BaseModel):
