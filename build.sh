@@ -8,7 +8,7 @@ fi
 
 # Determine which mode to run
 if [ "$1" == "development" ]; then
-  COMPOSE_COMMAND="-f docker/docker-compose.override.yaml --env-file .env.development up --build -d"
+  COMPOSE_COMMAND="--env-file .env.development up --build -d"
 elif [ "$1" == "production" ]; then
   COMPOSE_COMMAND="--env-file .env.production up --build -d"
 elif [ "$1" == "test" ]; then
